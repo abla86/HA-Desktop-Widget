@@ -332,3 +332,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **If you find this project useful, please give it a star on GitHub!**
+
+## Portfolio
+
+Part of the ABLA86 engineering portfolio. This repository contains the implementation and documentation for the project. The repository itself is the source of truth for current status, implementation and available tests.
