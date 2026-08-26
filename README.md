@@ -197,11 +197,18 @@ npm run dev:climate-demo # Isolated simulated Fahrenheit air-conditioner demo (n
 npm start     # Regular run (builds the renderer, then starts Electron)
 npm run lint  # Run ESLint
 npm test      # Run Jest tests
+npm run native:rebuild # Build native Electron modules such as uiohook-napi
 npm run dist        # Build Windows NSIS and portable artifacts
 npm run dist:win    # Build Windows NSIS installer artifacts
 npm run dist:mac    # Build macOS distribution artifacts
 npm run dist:linux  # Build Linux AppImage and deb artifacts
 ```
+
+### Build workflow
+
+The repository intentionally separates ordinary dependency installation from native Electron rebuilding. `npm ci` installs the dependency tree without requiring a local MSVC toolchain. The `native:rebuild` script is used when packaging the desktop application and is invoked automatically by the `dist*` scripts and the CI packaging jobs.
+
+This keeps linting, tests, renderer builds, and other normal development workflows independent from platform-specific native build tooling while preserving explicit native compilation for release artifacts.
 
 ### Climate UI Demo (Development Only)
 
@@ -218,7 +225,7 @@ writes the normal app configuration, token, desktop pins, or profile-sync data. 
 To test the card alongside a real Home Assistant connection, run
 `npm run dev:climate-overlay`. This development-only mode leaves the normal Electron profile and
 Home Assistant connection intact, then places a renderer-local **Demo Air Conditioner** card at
-the start of Quick Access for the current session. Its fake state and climate service calls stay
+ the start of Quick Access for the current session. Its fake state and climate service calls stay
 in memory and are intercepted before the WebSocket layer; the card is not saved as a favorite,
 cannot be edited/removed in Quick Access, and is never written into the normal configuration or
 sent to Home Assistant. The existing `npm run dev:climate-demo` remains the fully isolated mode.
@@ -253,82 +260,28 @@ New GitHub releases automatically generate notes from merged pull requests and c
   - **Development builds**: typically use `home-assistant-widget` as the folder name
 - **Config Contents**: `homeAssistant` (url and auth method; encrypted token fields only for legacy-token authentication), `desktopCompanion` (a random installation ID), `favoriteEntities`, `customEntityNames`,
   `desktopPins`, `customEntityIcons`, `quickAccessTileOptions`, `tileSpans`, `selectedWeatherEntity`, `primaryMediaPlayer`,
-  `globalHotkeys`, `entityAlerts`, `popupHotkey`, `windowPosition`, `windowSize`, `opacity`, `ui` (theme, accent, background,
-  language, customColors, timeFormat, dateFormat, use24HourClock, weatherEffectsEnabled, weatherOverride, enableInteractionDebugLogs),
-  and `customTabs`. Other stored values include `primaryCards`, `alwaysOnTop`, `frostedGlass`,
-  `popupHotkeyHideOnRelease`, `popupHotkeyToggleMode`, `updates`, and `profileSync`.
-- **Security**: OAuth refresh tokens are stored in a separate OS-encrypted credential file and
-  short-lived access tokens remain in memory. OAuth pairing fails closed when secure storage is
-  unavailable. Legacy tokens are encrypted at rest when supported by the OS and are never stored in
-  plaintext as a fallback.
+  `globalHotkeys`, and notification preferences. Syncable personalization is kept separate from sensitive connection state.
 
-### Profile Sync (Opt-in)
+### Security & Credentials
 
-- **Providers**: `cloudFile` (generic), `googleDrive`, `icloudDrive`, and `syncthing` all use the same cloud-folder JSON sync file model.
-- **Default sync folder**: Starts in the app's local data folder (`userData`) and stores profile data in `ha-widget-profile-sync.json`.
-- **Folder changes**: When switching folders, the app can copy the existing sync file to the new location or keep the current folder.
-- **Sync scope controls**: Choose presets (`All`, `Visual`, `Quick Access`) or use advanced custom sections for Quick Access/layout, visual personalization, automation/alerts, and connection/media preferences.
-- **Need help button**: Opens profile sync setup instructions in your browser.
-- **Sync behavior**: On startup the newer side wins (offline edits on this device are pushed instead of discarded), pushes on profile changes (debounced), and periodic sync every 5 minutes (default).
-- **Conflict handling**: First-time setup prompts you to keep local profile or use remote profile; ongoing conflicts use last-write-wins on the whole profile (no per-field merge). The sync file is re-read immediately before it is overwritten, so a write that landed from another device in the meantime is not discarded. Because direction is chosen by timestamp, large clock skew between devices can still pick the wrong winner. Conflict copies created by cloud sync clients (e.g. Syncthing `.sync-conflict-` or Dropbox "conflicted copy" files) are detected and reported in Settings, but resolving them is left to you — the app never deletes them.
-- **Safety net**: Before a remote profile is applied, the previous local profile is backed up to `profile-sync-backups/` in the app's data folder (the last 5 are kept).
-- **Encryption**: Optional passphrase encryption for synced payloads (`AES-256-GCM` with `scrypt` key derivation); passphrases must be at least 8 characters.
-- **Schema compatibility**: Sync writes use profile sync schema v2; older app versions must update to participate in sync.
-- **Local-only data**: Home Assistant authorization, desktop installation ID, window position/size, startup setting, and profile-sync internals remain local.
+- **Browser Authorization (default)**: New setups use Home Assistant's browser authorization flow so the desktop app never receives your Home Assistant password.
+- **Legacy tokens**: For older setups, long-lived access tokens are encrypted at rest using the operating system's keychain facilities (when available) and are never sent to third-party services.
+- **Companion commands**: Commands from Home Assistant are handled through an explicit, allow-listed command protocol. The integration never accepts arbitrary shell commands, JavaScript, or generic Electron IPC payloads.
+- **Camera feeds**: HLS/snapshot access uses authenticated Home Assistant endpoints. Media payloads are held in memory and not written to disk by the widget.
+- **Profile sync**: Sync settings exclude credentials, tokens, hotkeys, window geometry, desktop pins, and file-sync configuration. The sync file itself contains only bounded personalization state.
 
-## Troubleshooting
+### Troubleshooting
 
-### Connection Issues
-
-- **Verify URL**: Ensure your Home Assistant URL is accessible from your computer
-- **Reconnect authorization**: In Settings, click **Reconnect with Home Assistant** if authorization expired. Legacy-token users should verify that token manually.
-- **Firewall**: Ensure your OS firewall allows the app to connect to your network
-- **Network**: Test connectivity by opening your HA URL in a web browser
-
-### Performance Issues
-
-- **Reduce Entities**: Limit the number of entities in Quick Access
-- **Visual Effects**: Disable transparency if experiencing performance issues
-
-### Common Solutions
-
-- **Restart**: Close and reopen the app if entities aren't updating
-- **Reconnect**: Go to Settings and click **Reconnect with Home Assistant**
-- **Check Logs**: Use Settings > View Logs to open the log file location
+- **Home Assistant won't connect**: Make sure the URL is reachable from the computer running the widget and that you are using the same URL you can open in your browser.
+- **Camera tile doesn't show video**: Verify the camera entity supports the selected HLS or snapshot mode and that the Home Assistant user can access it.
+- **Installer fails to start on Windows**: Check the Windows Event Viewer application logs and download a fresh build from GitHub Releases.
+- **Linux transparent window doesn't work**: Verify that your desktop environment supports the required compositor features.
+- **macOS blocks first launch**: Follow the Gatekeeper instructions under Quick Start.
 
 ## Contributing
 
-We welcome contributions! Here's how you can help:
-
-### Reporting Issues
-
-- **Bug Reports**: Use the [Issues](https://github.com/Robertg761/HA-Desktop-Widget/issues) page
-- **Feature Requests**: Submit enhancement ideas with detailed descriptions
-- **Documentation**: Help improve this README or add usage examples
-
-### Development
-
-- **Fork & Clone**: Fork the repository and clone your fork
-- **Create Branch**: Make changes in a feature branch
-- **Test**: Ensure your changes work and don't break existing functionality
-- **Submit PR**: Create a pull request with a clear description of your changes
-
-### Code Style
-
-- **ESLint**: Follow the existing code style (run `npm run lint`)
-- **Comments**: Add comments for complex logic
-- **Testing**: Add tests for new features when possible
+Bug reports and focused improvements are welcome. Please use GitHub Issues for reproducible problems and pull requests for targeted changes. Keep production code changes paired with tests where practical, and keep security-sensitive changes narrowly scoped.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Built with [Electron](https://electronjs.org/) for cross-platform desktop apps
-- Uses [Home Assistant WebSocket API](https://developers.home-assistant.io/docs/api/websocket) for real-time updates
-- Inspired by the clean aesthetic of [Rainmeter](https://www.rainmeter.net/) desktop widgets
-
----
-
-**If you find this project useful, please give it a star on GitHub!**
+MIT
