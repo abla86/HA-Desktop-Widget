@@ -80,7 +80,7 @@ The Settings modal is organized into General, Personalization, Hotkeys, Alerts, 
 
 Planned for a future release:
 
-- **HA Assist voice**: A microphone button wired to Home Assistant's Assist pipeline (speech-to-text → intent → text-to-speech) so you can talk to your smart home from the desktop. Deferred as a standalone update because it needs the full HA server-side audio pipeline and real device testing.
+- **HA Assist voice**: A microphone button wired to Home Assistant's Assist pipeline (speech-to-text â†’ intent â†’ text-to-speech) so you can talk to your smart home from the desktop. Deferred as a standalone update because it needs the full HA server-side audio pipeline and real device testing.
 
 ## Quick Start
 
@@ -130,7 +130,7 @@ Assistant can flag out-of-date desktops.
 
 > [!NOTE]
 > A Home Assistant profile overwrites the sections it contains. If the folder-based profile sync
-> feature is also enabled for the same sections, whichever mechanism writes last wins — avoid
+> feature is also enabled for the same sections, whichever mechanism writes last wins â€” avoid
 > managing the same settings with both at once.
 
 ## How to Use
@@ -147,7 +147,7 @@ Assistant can flag out-of-date desktops.
 ### Comparison Graphs
 
 - **Create**: Click the "+" button, then **Add comparison graph**
-- **Pick entities**: Add up to 7 numeric sensors. Weather and climate entities can be graphed too — a weather entity contributes the **outside temperature** (search "outside" to find it, even though it is usually named after the integration, e.g. "Forecast Home")
+- **Pick entities**: Add up to 7 numeric sensors. Weather and climate entities can be graphed too â€” a weather entity contributes the **outside temperature** (search "outside" to find it, even though it is usually named after the integration, e.g. "Forecast Home")
 - **Read it**: Series share one time axis and one value scale, so the curves are directly comparable. Hover anywhere to get a crosshair and a readout of every series at that moment
 - **Units**: Entities sharing a unit share a scale. Adding a different unit (e.g. humidity next to temperature) warns and scales it separately
 - **Width**: Choose 2, 3 or 4 tiles wide in the graph's editor
@@ -207,7 +207,7 @@ npm run dist:linux  # Build Linux AppImage and deb artifacts
 
 Run `npm run dev:climate-demo` to launch a simulated **Demo Air Conditioner** without a Home
 Assistant server. The demo starts with a Fahrenheit AC entity in Quick Access and advertises
-its HVAC, fan, and preset modes plus a 60–86°F target range with 1°F steps. Click the tile to
+its HVAC, fan, and preset modes plus a 60â€“86Â°F target range with 1Â°F steps. Click the tile to
 toggle it; press and hold it to exercise the target-temperature, mode, fan, and preset controls.
 
 This command only works with the development `--dev` launch path. It creates a fresh temporary
@@ -224,7 +224,7 @@ cannot be edited/removed in Quick Access, and is never written into the normal c
 sent to Home Assistant. The existing `npm run dev:climate-demo` remains the fully isolated mode.
 
 Because the overlay uses the normal Electron profile, and only one widget runs per profile, it
-cannot start while a copy of the widget is already running — quit that one first. The isolated
+cannot start while a copy of the widget is already running â€” quit that one first. The isolated
 `dev:climate-demo` gets its own temporary profile and runs alongside the real widget.
 
 ### Release Channels
@@ -270,7 +270,7 @@ New GitHub releases automatically generate notes from merged pull requests and c
 - **Sync scope controls**: Choose presets (`All`, `Visual`, `Quick Access`) or use advanced custom sections for Quick Access/layout, visual personalization, automation/alerts, and connection/media preferences.
 - **Need help button**: Opens profile sync setup instructions in your browser.
 - **Sync behavior**: On startup the newer side wins (offline edits on this device are pushed instead of discarded), pushes on profile changes (debounced), and periodic sync every 5 minutes (default).
-- **Conflict handling**: First-time setup prompts you to keep local profile or use remote profile; ongoing conflicts use last-write-wins on the whole profile (no per-field merge). The sync file is re-read immediately before it is overwritten, so a write that landed from another device in the meantime is not discarded. Because direction is chosen by timestamp, large clock skew between devices can still pick the wrong winner. Conflict copies created by cloud sync clients (e.g. Syncthing `.sync-conflict-` or Dropbox "conflicted copy" files) are detected and reported in Settings, but resolving them is left to you — the app never deletes them.
+- **Conflict handling**: First-time setup prompts you to keep local profile or use remote profile; ongoing conflicts use last-write-wins on the whole profile (no per-field merge). The sync file is re-read immediately before it is overwritten, so a write that landed from another device in the meantime is not discarded. Because direction is chosen by timestamp, large clock skew between devices can still pick the wrong winner. Conflict copies created by cloud sync clients (e.g. Syncthing `.sync-conflict-` or Dropbox "conflicted copy" files) are detected and reported in Settings, but resolving them is left to you â€” the app never deletes them.
 - **Safety net**: Before a remote profile is applied, the previous local profile is backed up to `profile-sync-backups/` in the app's data folder (the last 5 are kept).
 - **Encryption**: Optional passphrase encryption for synced payloads (`AES-256-GCM` with `scrypt` key derivation); passphrases must be at least 8 characters.
 - **Schema compatibility**: Sync writes use profile sync schema v2; older app versions must update to participate in sync.
@@ -332,7 +332,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **If you find this project useful, please give it a star on GitHub!**
-
-## Portfolio
-
-Part of the ABLA86 engineering portfolio. This repository contains the implementation and documentation for the project. The repository itself is the source of truth for current status, implementation and available tests.
