@@ -335,3 +335,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Status
 
 This repository is part of the ABLA86 engineering portfolio. Current implementation status is represented by the code and repository history.
+
+## Change-control audit
+
+See [docs/REPOSITORY-CHANGE-AUDIT-2026-08-28.md](docs/REPOSITORY-CHANGE-AUDIT-2026-08-28.md) for the documented targeted-change scope audit and corrective action.
