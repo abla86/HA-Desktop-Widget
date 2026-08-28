@@ -8,9 +8,14 @@ on:
 
 permissions:
   contents: read
+  # Lets any failing job cancel the rest of the run.
   actions: write
 
 jobs:
+  # Kept separate from lint-and-test so a newly published advisory fails on its
+  # own instead of masking the lint, test, and packaging steps that used to run
+  # behind it. npm audit resolves the tree from package-lock.json alone, so this
+  # job intentionally skips npm ci and needs no native build toolchain.
   audit:
     runs-on: ubuntu-latest
     steps:
@@ -23,6 +28,9 @@ jobs:
           node-version: '20'
 
       - name: Audit dependency tree
+        # Production dependencies only: GHSA-mh99-v99m-4gvg has no fixed release
+        # for the electron-builder/jest/eslint toolchains, and forcing
+        # brace-expansion@5 tree-wide breaks the minimatch API packaging relies on.
         run: npm audit --omit=dev --audit-level=high
 
       - name: Cancel remaining CI jobs
@@ -67,9 +75,6 @@ jobs:
       - name: Build panel preview
         run: npm run build:panel
 
-      - name: Rebuild native dependencies for packaging
-        run: npm run native:rebuild
-
       - name: Package Windows app
         run: npx electron-builder --dir --win --x64 --publish never
 
@@ -81,6 +86,8 @@ jobs:
           $process = Start-Process -FilePath $executable -ArgumentList '--smoke-test' -PassThru -Wait `
             -RedirectStandardOutput smoke-stdout.log -RedirectStandardError smoke-stderr.log
           Get-Content smoke-stdout.log, smoke-stderr.log -ErrorAction SilentlyContinue
+          # The app cannot delete its own profile while Windows still holds its
+          # file handles, so remove any retained smoke profile after exit.
           Get-ChildItem -Path $env:TEMP -Directory -Filter 'ha-desktop-widget-smoke-*' -ErrorAction SilentlyContinue |
             ForEach-Object { Remove-Item -LiteralPath $_.FullName -Recurse -Force -ErrorAction Stop }
           if ($process.ExitCode -ne 0) {
@@ -99,7 +106,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-        
+
       - name: Use Node.js
         uses: actions/setup-node@v5
         with:
@@ -126,15 +133,14 @@ jobs:
       - name: Build renderer
         run: npm run build:renderer
 
-      - name: Rebuild native dependencies for packaging
-        run: npm run native:rebuild
-
       - name: Package Linux app
         run: npx electron-builder --dir --linux --x64 --publish never
 
       - name: Smoke launch packaged Linux app
         timeout-minutes: 2
         run: |
+          # Unpacked electron-builder output does not carry the setuid bit the
+          # Chromium sandbox helper requires, so restore it before launching.
           sudo chown root:root dist/linux-unpacked/chrome-sandbox
           sudo chmod 4755 dist/linux-unpacked/chrome-sandbox
           timeout --kill-after=5s 30s xvfb-run -a dbus-run-session -- \
@@ -151,7 +157,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-        
+
       - name: Use Node.js
         uses: actions/setup-node@v5
         with:
@@ -163,9 +169,6 @@ jobs:
 
       - name: Build renderer
         run: npm run build:renderer
-
-      - name: Rebuild native dependencies for packaging
-        run: npm run native:rebuild
 
       - name: Package universal macOS app
         run: npx electron-builder --dir --mac --universal --publish never
