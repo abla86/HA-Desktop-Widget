@@ -1,5 +1,7 @@
 # HA Desktop Widget
 
+> **Provenance:** This repository is a fork/copy of the upstream project by Robertg761. It is retained for reference and is not presented as original ABLA86 authorship. Upstream attribution and license notices are preserved.
+
 A semi-transparent desktop widget for Home Assistant that provides quick access to your smart home devices from your desktop.
 
 [![CI](https://github.com/Robertg761/HA-Desktop-Widget/actions/workflows/ci.yml/badge.svg)](https://github.com/Robertg761/HA-Desktop-Widget/actions/workflows/ci.yml)
